@@ -3,43 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dodge Game with Ads</title>
+    <title>Jump Slime - Dodge Game</title>
     <style>
-        /* 画面全体のスタイル */
-        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; }
-        canvas { display: block; background: #000; margin: 0 auto; margin-top: 70px; }
+        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; touch-action: none; }
         
-        /* 広告枠（最上部に固定） */
-        #ad-wrapper {
-            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
-            background: #333; z-index: 100; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; border-bottom: 1px solid #444;
+        /* 広告枠を上下に150pxで固定（中サイズ300x250対応） */
+        #ad-top, #ad-bottom { 
+            position: fixed; left: 0; width: 100%; height: 150px; 
+            background: #333; z-index: 100; display: flex; align-items: center; justify-content: center; 
         }
-        #ad-wrapper p { color: #888; font-size: 8px; margin: 0; padding-bottom: 2px; }
+        #ad-top { top: 0; }
+        #ad-bottom { bottom: 0; }
+        
+        iframe { border: none; width: 100%; height: 150px; }
 
-        /* 説明画面（広告の下から始まるように調整） */
+        /* キャンバス：広告に被らないよう150px下から配置 */
+        canvas { display: block; background: #000; margin: 0 auto; margin-top: 150px; }
+        
         #startScreen {
-            position: absolute; top: 70px; left: 0; width: 100%; height: calc(100% - 70px);
+            position: absolute; top: 150px; left: 0; width: 100%; height: calc(100vh - 300px);
             background: rgba(0, 0, 0, 0.85); color: white;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 10;
+            z-index: 50;
         }
         #goButton {
             padding: 15px 40px; font-size: 24px; font-weight: bold;
             color: white; background: #ff4757; border: none; border-radius: 50px;
             cursor: pointer; box-shadow: 0 5px #ff6b81;
         }
-        #ui { position: absolute; top: 80px; left: 10px; color: white; font-size: 20px; z-index: 5; display: none; }
+        #ui { position: absolute; top: 160px; left: 20px; color: white; font-size: 24px; font-weight: bold; z-index: 5; display: none; text-shadow: 2px 2px 4px #000; }
     </style>
 </head>
 <body>
 
-    <div id="ad-wrapper">
-        <p>SPONSOR</p>
-        <div id="ninja-ad-box">
-            <script src="https://adm.shinobi.jp/s/a7801f6e216c0ea8aca9613f79a40a12"></script>
-            </div>
-    </div>
+    <div id="ad-top"><iframe id="frame-top" src="ad.html"></iframe></div>
+    <div id="ad-bottom"><iframe id="frame-bottom" src="ad.html"></iframe></div>
 
     <div id="startScreen">
         <h1 style="color:#00FF00;">DODGE GAME</h1>
@@ -57,22 +55,14 @@
         const startScreen = document.getElementById("startScreen");
         const goButton = document.getElementById("goButton");
 
+        // キャンバスサイズ：上下150pxずつ引く（計300px）
         canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - 70; // 広告分を引く
+        canvas.height = window.innerHeight - 300;
 
         let score = 0;
         let gameActive = false;
-        let player = { x: canvas.width/2, y: canvas.height - 50, size: 30, color: "#00FF00" };
+        let player = { x: canvas.width/2 - 15, y: canvas.height - 50, size: 30, color: "#00FF00" };
         let enemies = [];
-
-        // 広告のリフレッシュ（1分ごと）
-        setInterval(() => {
-            const adBox = document.getElementById("ninja-ad-box");
-            const currentAdTag = adBox.innerHTML;
-            adBox.innerHTML = "";
-            adBox.innerHTML = currentAdTag;
-            console.log("Ad Refreshed");
-        }, 20100);
 
         goButton.addEventListener("click", () => {
             startScreen.style.display = "none";
@@ -82,37 +72,46 @@
             update();
         });
 
+        // 操作：指の位置にプレイヤーを合わせる
         function move(e) {
             if(!gameActive) return;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             player.x = clientX - player.size / 2;
+            
+            // 画面外はみ出し防止
+            if(player.x < 0) player.x = 0;
+            if(player.x > canvas.width - player.size) player.x = canvas.width - player.size;
         }
         window.addEventListener("mousemove", move);
         window.addEventListener("touchstart", move);
-        window.addEventListener("touchmove", move);
+        window.addEventListener("touchmove", (e) => { move(e); e.preventDefault(); }, {passive: false});
 
         function spawnEnemy() {
             if(!gameActive) return;
             enemies.push({
-                x: Math.random() * (canvas.width - 20),
+                x: Math.random() * (canvas.width - 25),
                 y: -30,
-                size: 20 + Math.random() * 20,
-                speed: 4 + Math.random() * 5
+                size: 25 + Math.random() * 20,
+                speed: 4 + Math.min(score / 5, 8) // スコアに応じて少し加速
             });
-            setTimeout(spawnEnemy, 500);
+            setTimeout(spawnEnemy, Math.max(250, 600 - score * 5));
         }
 
         function update() {
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // プレイヤー描画
             ctx.fillStyle = player.color;
             ctx.fillRect(player.x, player.y, player.size, player.size);
 
+            // 敵の描画と判定
             enemies.forEach((enemy, index) => {
                 enemy.y += enemy.speed;
                 ctx.fillStyle = "#ff4757";
                 ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
 
+                // 当たり判定
                 if (player.x < enemy.x + enemy.size && player.x + player.size > enemy.x &&
                     player.y < enemy.y + enemy.size && player.y + player.size > enemy.y) {
                     gameActive = false;
@@ -120,6 +119,7 @@
                     location.reload();
                 }
 
+                // 画面外に出たらスコア加算
                 if(enemy.y > canvas.height) {
                     enemies.splice(index, 1);
                     score++;
@@ -128,6 +128,17 @@
             });
             requestAnimationFrame(update);
         }
+
+        // 🚀 30秒ごとにad.htmlを強制リフレッシュ
+        setInterval(() => {
+            ["frame-top", "frame-bottom"].forEach(id => {
+                const f = document.getElementById(id);
+                if(f) {
+                    const s = f.src; f.src = "about:blank";
+                    setTimeout(() => f.src = s, 100);
+                }
+            });
+        }, 28000);
     </script>
 </body>
 </html>
