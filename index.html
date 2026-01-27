@@ -3,154 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jump Slime - Dodge Game</title>
+    <title>Dodge Game</title>
     <style>
         body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; touch-action: none; }
-        
-        /* 広告枠固定 */
-        #ad-top, #ad-bottom { 
-            position: fixed; left: 0; width: 100%; height: 150px; 
-            background: #333; z-index: 100; display: flex; align-items: center; justify-content: center; 
-        }
-        #ad-top { top: 0; }
-        #ad-bottom { bottom: 0; }
+        #ad-top, #ad-bottom { position: fixed; left: 0; width: 100%; height: 150px; background: #333; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        #ad-top { top: 0; } #ad-bottom { bottom: 0; }
         iframe { border: none; width: 100%; height: 150px; }
-
-        canvas { display: block; background: #000; margin: 0 auto; margin-top: 150px; }
-        
-        /* スタート・リザルト共通画面 */
-        #menuScreen {
-            position: absolute; top: 150px; left: 0; width: 100%; height: calc(100vh - 300px);
-            background: rgba(0, 0, 0, 0.85); color: white;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 50;
-        }
-
-        .menu-btn {
-            padding: 15px 40px; font-size: 20px; font-weight: bold;
-            color: white; border: none; border-radius: 50px;
-            cursor: pointer; text-decoration: none; margin: 10px; text-align: center;
-        }
+        canvas { display: block; background: #000; margin: 150px auto 0; }
+        #menuScreen { position: absolute; top: 150px; left: 0; width: 100%; height: calc(100vh - 300px); background: rgba(0,0,0,0.95); color: white; display: flex; flex-direction: column; align-items: center; justify-content: space-around; z-index: 200; padding: 10px 0; box-sizing: border-box; }
+        #ad-middle { width: 300px; height: 250px; display: none; }
+        .btn-group { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 8px; }
+        .menu-btn { padding: 12px 30px; font-size: 18px; border: none; border-radius: 50px; color: white; font-weight: bold; cursor: pointer; text-decoration: none; width: 240px; text-align: center; }
         #goButton { background: #ff4757; box-shadow: 0 5px #ff6b81; }
-        .link-btn { background: #ff4081; box-shadow: 0 5px #c2185b; font-size: 18px; }
-
-        #ui { position: absolute; top: 160px; left: 20px; color: white; font-size: 24px; font-weight: bold; z-index: 5; display: none; text-shadow: 2px 2px 4px #000; }
+        .link-btn { background: #ff4081; box-shadow: 0 4px #c2185b; }
+        #ui { position: absolute; top: 160px; left: 20px; color: white; font-size: 24px; font-weight: bold; z-index: 5; display: none; }
     </style>
 </head>
 <body>
-
-    <div id="ad-top"><iframe id="frame-top" src="ad.html"></iframe></div>
-    <div id="ad-bottom"><iframe id="frame-bottom" src="ad.html"></iframe></div>
-
+    <div id="ad-top"><iframe src="ad.html"></iframe></div>
+    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
     <div id="menuScreen">
-        <h1 id="menuTitle" style="color:#00FF00; margin-bottom:10px;">DODGE GAME</h1>
-        <p id="menuMsg" style="margin-bottom:20px;">障害物を避けてください！</p>
-        <button id="goButton" class="menu-btn">START!</button>
-        <a href="https://saaaachi.github.io/Color.Match/" class="menu-btn link-btn">他のゲームはこちら</a>
+        <div style="text-align:center;"><h2 id="menuTitle" style="color:#00FF00; margin:0;">DODGE GAME</h2><p id="menuMsg" style="margin:2px 0;">障害物を避けろ！</p></div>
+        <div id="ad-middle"><iframe id="frame-middle" src="" style="width:300px; height:250px; border:none;"></iframe></div>
+        <div class="btn-group">
+            <button id="goButton" class="menu-btn">START!</button>
+            <a href="https://saaaachi.github.io/Namber-Order/" class="menu-btn link-btn">他のゲームはこちら</a>
+        </div>
     </div>
-
     <div id="ui">Score: 0</div>
     <canvas id="gameCanvas"></canvas>
-
     <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const ui = document.getElementById("ui");
-        const menuScreen = document.getElementById("menuScreen");
-        const menuTitle = document.getElementById("menuTitle");
-        const menuMsg = document.getElementById("menuMsg");
-        const goButton = document.getElementById("goButton");
-
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - 300;
-
-        let score = 0;
-        let gameActive = false;
-        let player = { x: canvas.width/2 - 15, y: canvas.height - 50, size: 30, color: "#00FF00" };
-        let enemies = [];
-        let animationId;
-
-        goButton.addEventListener("click", () => {
-            menuScreen.style.display = "none";
-            ui.style.display = "block";
-            gameActive = true;
-            score = 0;
-            enemies = [];
-            ui.innerText = "Score: 0";
-            spawnEnemy();
-            update();
-        });
-
-        function move(e) {
-            if(!gameActive) return;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            player.x = clientX - player.size / 2;
-            if(player.x < 0) player.x = 0;
-            if(player.x > canvas.width - player.size) player.x = canvas.width - player.size;
-        }
-        window.addEventListener("mousemove", move);
-        window.addEventListener("touchstart", move);
-        window.addEventListener("touchmove", (e) => { move(e); e.preventDefault(); }, {passive: false});
-
-        function spawnEnemy() {
-            if(!gameActive) return;
-            enemies.push({
-                x: Math.random() * (canvas.width - 25),
-                y: -30,
-                size: 25 + Math.random() * 20,
-                speed: 4 + Math.min(score / 5, 8)
-            });
-            setTimeout(spawnEnemy, Math.max(250, 600 - score * 5));
-        }
-
+        const canvas = document.getElementById("gameCanvas"), ctx = canvas.getContext("2d"), ui = document.getElementById("ui"), menuScreen = document.getElementById("menuScreen"), menuTitle = document.getElementById("menuTitle"), menuMsg = document.getElementById("menuMsg"), goButton = document.getElementById("goButton"), adMiddle = document.getElementById("ad-middle"), frameMiddle = document.getElementById("frame-middle");
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight - 300;
+        let score = 0, gameActive = false, player = { x: canvas.width/2 - 15, y: canvas.height - 50 }, enemies = [];
+        goButton.onclick = () => { menuScreen.style.display = "none"; adMiddle.style.display = "none"; frameMiddle.src = ""; ui.style.display = "block"; gameActive = true; score = 0; enemies = []; ui.innerText = "Score: 0"; spawnEnemy(); update(); };
+        function move(e) { if(!gameActive) return; const cx = e.touches ? e.touches[0].clientX : e.clientX; player.x = cx - 15; if(player.x < 0) player.x = 0; if(player.x > canvas.width - 30) player.x = canvas.width - 30; }
+        window.addEventListener("mousemove", move); window.addEventListener("touchstart", move); window.addEventListener("touchmove", (e) => { move(e); e.preventDefault(); }, {passive: false});
+        function spawnEnemy() { if(!gameActive) return; enemies.push({ x: Math.random() * (canvas.width - 25), y: -30, size: 25 + Math.random() * 20, speed: 4 + Math.min(score / 5, 8) }); setTimeout(spawnEnemy, Math.max(250, 600 - score * 5)); }
         function update() {
-            if(!gameActive) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.size, player.size);
-
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                let enemy = enemies[i];
-                enemy.y += enemy.speed;
-                ctx.fillStyle = "#ff4757";
-                ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
-
-                // 当たり判定
-                if (player.x < enemy.x + enemy.size && player.x + player.size > enemy.x &&
-                    player.y < enemy.y + enemy.size && player.y + player.size > enemy.y) {
-                    gameOver();
-                    return;
-                }
-
-                if(enemy.y > canvas.height) {
-                    enemies.splice(i, 1);
-                    score++;
-                    ui.innerText = "Score: " + score;
-                }
-            }
-            animationId = requestAnimationFrame(update);
+            if(!gameActive) return; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = "#00FF00"; ctx.fillRect(player.x, player.y, 30, 30);
+            for(let i = enemies.length - 1; i >= 0; i--) { let e = enemies[i]; e.y += e.speed; ctx.fillStyle = "#ff4757"; ctx.fillRect(e.x, e.y, e.size, e.size); if (player.x < e.x + e.size && player.x + 30 > e.x && player.y < e.y + e.size && player.y + 30 > e.y) { gameOver(); return; } if(e.y > canvas.height) { enemies.splice(i, 1); score++; ui.innerText = "Score: " + score; } }
+            requestAnimationFrame(update);
         }
-
-        function gameOver() {
-            gameActive = false;
-            cancelAnimationFrame(animationId);
-            menuTitle.innerText = "GAME OVER";
-            menuTitle.style.color = "#ff4757";
-            menuMsg.innerText = "Score: " + score;
-            goButton.innerText = "RETRY";
-            menuScreen.style.display = "flex";
-        }
-
-        setInterval(() => {
-            ["frame-top", "frame-bottom"].forEach(id => {
-                const f = document.getElementById(id);
-                if(f) {
-                    const s = f.src; f.src = "about:blank";
-                    setTimeout(() => f.src = s, 100);
-                }
-            });
-        }, 28000);
+        function gameOver() { gameActive = false; menuTitle.innerText = "GAME OVER"; menuTitle.style.color = "#ff4757"; menuMsg.innerText = "Score: " + score; goButton.innerText = "RETRY"; adMiddle.style.display = "flex"; frameMiddle.src = "ad.html"; menuScreen.style.display = "flex"; }
     </script>
 </body>
 </html>
