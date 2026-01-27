@@ -3,38 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dodge Game</title>
+    <title>Jump Slime</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; touch-action: none; }
-        #ad-top, #ad-bottom { position: fixed; left: 0; width: 100%; height: 150px; background: #333; z-index: 100; display: flex; align-items: center; justify-content: center; }
-        #ad-top { top: 0; } #ad-bottom { bottom: 0; }
-        iframe { border: none; width: 100%; height: 150px; }
-        canvas { display: block; background: #000; margin: 150px auto 0; }
-        #menuScreen { position: absolute; top: 150px; left: 0; width: 100%; height: calc(100vh - 300px); background: rgba(0,0,0,0.95); color: white; display: flex; flex-direction: column; align-items: center; justify-content: space-around; z-index: 200; padding: 10px 0; box-sizing: border-box; }
-        #ad-middle-container { width: 300px; min-height: 250px; display: none; justify-content: center; align-items: center; }
-        .btn-group { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 8px; transition: opacity 0.3s; }
+        body { margin: 0; height: 100vh; display: flex; flex-direction: column; background: #222; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        #ad-top, #ad-bottom { width: 100%; height: 120px; background: #333; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 100; }
+        iframe { border: none; width: 100%; height: 100%; }
+        #game-area { flex-grow: 1; position: relative; width: 100%; background: #000; overflow: hidden; }
+        canvas { display: block; width: 100%; height: 100%; }
+        #ui { position: absolute; top: 10px; left: 20px; color: white; font-size: 24px; font-weight: bold; z-index: 5; display: none; }
+        #menuScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); color: white; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; z-index: 200; padding: 20px 0; box-sizing: border-box; }
+        #ad-middle-container { width: 300px; height: 250px; background: #333; display: none; justify-content: center; align-items: center; overflow: hidden; position: relative; flex-shrink: 0; }
+        .btn-group { display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0; }
         .menu-btn { padding: 12px 30px; font-size: 18px; border: none; border-radius: 50px; color: white; font-weight: bold; cursor: pointer; text-decoration: none; width: 240px; text-align: center; }
         #goButton { background: #ff4757; box-shadow: 0 5px #ff6b81; }
         .link-btn { background: #ff4081; box-shadow: 0 4px #c2185b; }
-        #ui { position: absolute; top: 160px; left: 20px; color: white; font-size: 24px; font-weight: bold; z-index: 5; display: none; }
     </style>
 </head>
 <body>
     <div id="ad-top"><iframe src="ad.html"></iframe></div>
-    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
-    <div id="menuScreen">
-        <div style="text-align:center;"><h2 id="menuTitle" style="color:#00FF00; margin:0;">DODGE GAME</h2><p id="menuMsg" style="margin:2px 0;">障害物を避けろ！</p></div>
-        <div id="ad-middle-container"><script src="https://adm.shinobi.jp/s/1e6de436ea850948e238e975a93767eb"></script></div>
-        <div class="btn-group" id="btnGroup" style="opacity: 1;"><button id="goButton" class="menu-btn">START!</button><a href="https://saaaachi.github.io/Namber-Order/" class="menu-btn link-btn">他のゲームはこちら</a></div>
+    <div id="game-area">
+        <div id="ui">Score: 0</div>
+        <div id="menuScreen">
+            <div style="text-align:center;"><h2 id="menuTitle" style="color:#00FF00; margin:0;">DODGE GAME</h2><p id="menuMsg" style="margin:2px 0;">障害物を避けろ！</p></div>
+            <div id="ad-middle-container"><script src="https://adm.shinobi.jp/s/1e6de436ea850948e238e975a93767eb"></script></div>
+            <div class="btn-group" id="btnGroup">
+                <button id="goButton" class="menu-btn">START!</button>
+                <a href="https://saaaachi.github.io/Namber-Order/" class="menu-btn link-btn">他のゲームはこちら</a>
+            </div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
     </div>
-    <div id="ui">Score: 0</div>
-    <canvas id="gameCanvas"></canvas>
+    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
     <script>
         const canvas = document.getElementById("gameCanvas"), ctx = canvas.getContext("2d"), ui = document.getElementById("ui"), menuScreen = document.getElementById("menuScreen"), menuTitle = document.getElementById("menuTitle"), menuMsg = document.getElementById("menuMsg"), goButton = document.getElementById("goButton"), adMid = document.getElementById("ad-middle-container"), btnGroup = document.getElementById("btnGroup");
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight - 300;
-        let score = 0, gameActive = false, player = { x: canvas.width/2 - 15, y: canvas.height - 50 }, enemies = [];
-        goButton.onclick = () => { menuScreen.style.display = "none"; adMid.style.display = "none"; btnGroup.style.opacity = "0"; btnGroup.style.pointerEvents = "none"; ui.style.display = "block"; gameActive = true; score = 0; enemies = []; ui.innerText = "Score: 0"; spawnEnemy(); update(); };
-        function move(e) { if(!gameActive) return; const cx = e.touches ? e.touches[0].clientX : e.clientX; player.x = cx - 15; if(player.x < 0) player.x = 0; if(player.x > canvas.width - 30) player.x = canvas.width - 30; }
+        function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
+        window.onload = () => { resize(); adMid.style.display = "none"; };
+        let score = 0, gameActive = false, player = { x: 0, y: 0 }, enemies = [];
+        goButton.onclick = () => { menuScreen.style.display = "none"; adMid.style.display = "none"; ui.style.display = "block"; gameActive = true; score = 0; enemies = []; player = { x: canvas.width/2 - 15, y: canvas.height - 50 }; ui.innerText = "Score: 0"; spawnEnemy(); update(); };
+        function move(e) { if(!gameActive) return; const cx = e.touches ? e.touches[0].clientX : e.clientX; const rect = canvas.getBoundingClientRect(); player.x = cx - rect.left - 15; }
         window.addEventListener("mousemove", move); window.addEventListener("touchstart", move); window.addEventListener("touchmove", (e) => { move(e); e.preventDefault(); }, {passive: false});
         function spawnEnemy() { if(!gameActive) return; enemies.push({ x: Math.random() * (canvas.width - 25), y: -30, size: 25 + Math.random() * 20, speed: 4 + Math.min(score / 5, 8) }); setTimeout(spawnEnemy, Math.max(250, 600 - score * 5)); }
         function update() {
@@ -42,8 +48,12 @@
             for(let i = enemies.length - 1; i >= 0; i--) { let e = enemies[i]; e.y += e.speed; ctx.fillStyle = "#ff4757"; ctx.fillRect(e.x, e.y, e.size, e.size); if (player.x < e.x + e.size && player.x + 30 > e.x && player.y < e.y + e.size && player.y + 30 > e.y) { gameOver(); return; } if(e.y > canvas.height) { enemies.splice(i, 1); score++; ui.innerText = "Score: " + score; } }
             requestAnimationFrame(update);
         }
-        function gameOver() { gameActive = false; menuTitle.innerText = "GAME OVER"; menuTitle.style.color = "#ff4757"; menuMsg.innerText = "Score: " + score; goButton.innerText = "RETRY"; adMid.style.display = "flex"; menuScreen.style.display = "flex"; setTimeout(() => { btnGroup.style.opacity = "1"; btnGroup.style.pointerEvents = "auto"; }, 500); }
-        setInterval(() => { document.querySelectorAll('iframe').forEach(f => { const s = f.src; f.src = "about:blank"; setTimeout(() => f.src = s, 100); }); }, 30000);
+        function gameOver() {
+            gameActive = false; menuTitle.innerText = "GAME OVER"; menuTitle.style.color = "#ff4757"; menuMsg.innerText = "Score: " + score; goButton.innerText = "RETRY";
+            btnGroup.style.opacity = "0"; btnGroup.style.pointerEvents = "none";
+            adMid.style.display = "flex"; menuScreen.style.display = "flex";
+            setTimeout(() => { btnGroup.style.opacity = "1"; btnGroup.style.pointerEvents = "auto"; }, 500);
+        }
     </script>
 </body>
 </html>
