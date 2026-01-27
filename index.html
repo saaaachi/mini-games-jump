@@ -7,30 +7,33 @@
     <style>
         body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; touch-action: none; }
         
-        /* 広告枠を上下に150pxで固定（中サイズ300x250対応） */
+        /* 広告枠固定 */
         #ad-top, #ad-bottom { 
             position: fixed; left: 0; width: 100%; height: 150px; 
             background: #333; z-index: 100; display: flex; align-items: center; justify-content: center; 
         }
         #ad-top { top: 0; }
         #ad-bottom { bottom: 0; }
-        
         iframe { border: none; width: 100%; height: 150px; }
 
-        /* キャンバス：広告に被らないよう150px下から配置 */
         canvas { display: block; background: #000; margin: 0 auto; margin-top: 150px; }
         
-        #startScreen {
+        /* スタート・リザルト共通画面 */
+        #menuScreen {
             position: absolute; top: 150px; left: 0; width: 100%; height: calc(100vh - 300px);
             background: rgba(0, 0, 0, 0.85); color: white;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 50;
         }
-        #goButton {
-            padding: 15px 40px; font-size: 24px; font-weight: bold;
-            color: white; background: #ff4757; border: none; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 5px #ff6b81;
+
+        .menu-btn {
+            padding: 15px 40px; font-size: 20px; font-weight: bold;
+            color: white; border: none; border-radius: 50px;
+            cursor: pointer; text-decoration: none; margin: 10px; text-align: center;
         }
+        #goButton { background: #ff4757; box-shadow: 0 5px #ff6b81; }
+        .link-btn { background: #ff4081; box-shadow: 0 5px #c2185b; font-size: 18px; }
+
         #ui { position: absolute; top: 160px; left: 20px; color: white; font-size: 24px; font-weight: bold; z-index: 5; display: none; text-shadow: 2px 2px 4px #000; }
     </style>
 </head>
@@ -39,10 +42,11 @@
     <div id="ad-top"><iframe id="frame-top" src="ad.html"></iframe></div>
     <div id="ad-bottom"><iframe id="frame-bottom" src="ad.html"></iframe></div>
 
-    <div id="startScreen">
-        <h1 style="color:#00FF00;">DODGE GAME</h1>
-        <p>障害物を避けてください！</p>
-        <button id="goButton">GO!</button>
+    <div id="menuScreen">
+        <h1 id="menuTitle" style="color:#00FF00; margin-bottom:10px;">DODGE GAME</h1>
+        <p id="menuMsg" style="margin-bottom:20px;">障害物を避けてください！</p>
+        <button id="goButton" class="menu-btn">START!</button>
+        <a href="https://saaaachi.github.io/Color.Match/" class="menu-btn link-btn">他のゲームはこちら</a>
     </div>
 
     <div id="ui">Score: 0</div>
@@ -51,11 +55,12 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const scoreElement = document.getElementById("ui");
-        const startScreen = document.getElementById("startScreen");
+        const ui = document.getElementById("ui");
+        const menuScreen = document.getElementById("menuScreen");
+        const menuTitle = document.getElementById("menuTitle");
+        const menuMsg = document.getElementById("menuMsg");
         const goButton = document.getElementById("goButton");
 
-        // キャンバスサイズ：上下150pxずつ引く（計300px）
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight - 300;
 
@@ -63,22 +68,23 @@
         let gameActive = false;
         let player = { x: canvas.width/2 - 15, y: canvas.height - 50, size: 30, color: "#00FF00" };
         let enemies = [];
+        let animationId;
 
         goButton.addEventListener("click", () => {
-            startScreen.style.display = "none";
-            scoreElement.style.display = "block";
+            menuScreen.style.display = "none";
+            ui.style.display = "block";
             gameActive = true;
+            score = 0;
+            enemies = [];
+            ui.innerText = "Score: 0";
             spawnEnemy();
             update();
         });
 
-        // 操作：指の位置にプレイヤーを合わせる
         function move(e) {
             if(!gameActive) return;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             player.x = clientX - player.size / 2;
-            
-            // 画面外はみ出し防止
             if(player.x < 0) player.x = 0;
             if(player.x > canvas.width - player.size) player.x = canvas.width - player.size;
         }
@@ -92,7 +98,7 @@
                 x: Math.random() * (canvas.width - 25),
                 y: -30,
                 size: 25 + Math.random() * 20,
-                speed: 4 + Math.min(score / 5, 8) // スコアに応じて少し加速
+                speed: 4 + Math.min(score / 5, 8)
             });
             setTimeout(spawnEnemy, Math.max(250, 600 - score * 5));
         }
@@ -101,12 +107,11 @@
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // プレイヤー描画
             ctx.fillStyle = player.color;
             ctx.fillRect(player.x, player.y, player.size, player.size);
 
-            // 敵の描画と判定
-            enemies.forEach((enemy, index) => {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let enemy = enemies[i];
                 enemy.y += enemy.speed;
                 ctx.fillStyle = "#ff4757";
                 ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
@@ -114,22 +119,29 @@
                 // 当たり判定
                 if (player.x < enemy.x + enemy.size && player.x + player.size > enemy.x &&
                     player.y < enemy.y + enemy.size && player.y + player.size > enemy.y) {
-                    gameActive = false;
-                    alert("Game Over! Score: " + score);
-                    location.reload();
+                    gameOver();
+                    return;
                 }
 
-                // 画面外に出たらスコア加算
                 if(enemy.y > canvas.height) {
-                    enemies.splice(index, 1);
+                    enemies.splice(i, 1);
                     score++;
-                    scoreElement.innerText = "Score: " + score;
+                    ui.innerText = "Score: " + score;
                 }
-            });
-            requestAnimationFrame(update);
+            }
+            animationId = requestAnimationFrame(update);
         }
 
-        // 🚀 30秒ごとにad.htmlを強制リフレッシュ
+        function gameOver() {
+            gameActive = false;
+            cancelAnimationFrame(animationId);
+            menuTitle.innerText = "GAME OVER";
+            menuTitle.style.color = "#ff4757";
+            menuMsg.innerText = "Score: " + score;
+            goButton.innerText = "RETRY";
+            menuScreen.style.display = "flex";
+        }
+
         setInterval(() => {
             ["frame-top", "frame-bottom"].forEach(id => {
                 const f = document.getElementById(id);
