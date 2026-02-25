@@ -1,14 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; background: #333; }
+        body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
+        .ad-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
     </style>
 </head>
 <body>
-   <!-- admax -->
-<script src="https://adm.shinobi.jp/s/c7ced7f77151017f32f16a375f73e1cd"></script>
-<!-- admax --> 
+    <div class="ad-container" id="ad-box">
+        </div>
+
+    <script>
+        // URLのパラメータ (?pos=top など) を取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const pos = urlParams.get('pos');
+        const adBox = document.getElementById('ad-box');
+
+        // i-mobileの情報を設定
+        let asid = "";
+        let divId = "";
+
+        if (pos === 'top') {
+            asid = "1924119"; // 上用
+            divId = "im-top-ad";
+        } else {
+            asid = "1924120"; // 下用
+            divId = "im-bottom-ad";
+        }
+
+        // 広告枠を作成して流し込む
+        adBox.innerHTML = `<div id="${divId}"></div>`;
+
+        // i-mobileのスクリプトを動的に読み込む
+        window.adsbyimobile = window.adsbyimobile || [];
+        window.adsbyimobile.push({
+            pid: 84561,
+            mid: 590804,
+            asid: asid,
+            type: "banner",
+            display: "inline",
+            elementid: divId
+        });
+
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = "https://imp-adedge.i-mobile.co.jp/script/v1/spot.js?20220104";
+        document.body.appendChild(script);
+        // ad.html の script の最後の方に追加
+console.log(pos + " の広告が読み込まれました (asid: " + asid + ")");
+    </script>
 </body>
 </html>
