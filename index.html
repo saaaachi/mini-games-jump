@@ -177,9 +177,6 @@
             const timerInt = setInterval(() => { countdown--; closeBtn.innerText = countdown; if (countdown <= 0) { clearInterval(timerInt); closeBtn.innerText = "×"; closeBtn.style.pointerEvents = "auto"; } }, 1000);
         }
         function closeBigAd() { document.getElementById("bigAdScreen").style.display = "none"; document.getElementById("ad-large-frame").src = ""; }
-
-        setInterval(() => { const f = document.getElementById('frame-top'); if(f) f.src = "ad.html?pos=top&t=" + Date.now(); }, 30000);
-        setTimeout(() => { setInterval(() => { const f = document.getElementById('frame-bottom'); if(f) f.src = "ad.html?pos=bottom&t=" + Date.now(); }, 30000); }, 15000);
     </script>
 </body>
 </html>
