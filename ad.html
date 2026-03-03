@@ -3,7 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #333; display: flex; justify-content: center; align-items: center; width: 320px; height: 100px; }
+        /* 画面全体の設定 */
+        body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: #333; 
+            display: flex; 
+            justify-content: center; /* 左右中央 */
+            align-items: center;     /* 上下中央 */
+            width: 100vw; 
+            height: 100vh; 
+        }
+
+        /* 広告を入れる箱の設定 */
+        #ad-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* i-mobileが自動生成するタグも強制的に中央へ */
+        #ad-container div {
+            margin: 0 auto !important;
+            display: flex !important;
+            justify-content: center !important;
+        }
     </style>
 </head>
 <body>
@@ -24,7 +51,7 @@
             ]
         };
 
-        // URLから「上か下か」を判断
+        // URLから「上(top)か下(bottom)か」を判断
         const urlParams = new URLSearchParams(window.location.search);
         const pos = urlParams.get('pos') === 'bottom' ? 'bottom' : 'top';
         let currentIndex = 0;
@@ -33,26 +60,29 @@
             const container = document.getElementById('ad-container');
             const spot = spots[pos][currentIndex];
             
-            // コンテナを空にして新しい広告を注入
+            // 前の広告を消して、新しい箱を作る
             container.innerHTML = `<div id="${spot.eid}"></div>`;
             
+            // i-mobileのスクリプトを読み込む
             const scriptTag = document.createElement('script');
             scriptTag.src = "https://imp-adedge.i-mobile.co.jp/script/v1/spot.js?20220104";
             scriptTag.async = true;
             container.appendChild(scriptTag);
 
+            // 広告を表示する設定を実行
             const configTag = document.createElement('script');
             configTag.innerHTML = `(window.adsbyimobile=window.adsbyimobile||[]).push({pid:84561,mid:590804,asid:${spot.asid},type:"banner",display:"inline",elementid:"${spot.eid}"})`;
             container.appendChild(configTag);
 
-            // 次の広告へのタイマーを設定（バラバラの秒数！）
+            // 指定されたバラバラの秒数後に、次の広告へ切り替え
             setTimeout(() => {
                 currentIndex = (currentIndex + 1) % spots[pos].length;
                 showAd();
             }, spot.time);
         }
 
-        showAd(); // 最初の広告を表示
+        // 実行！
+        showAd();
     </script>
 </body>
 </html>
