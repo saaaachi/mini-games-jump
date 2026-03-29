@@ -3,66 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dodge Game - v26.8</title>
+    <title>Dodge Game - Max Revenue</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1299640300068792" crossorigin="anonymous"></script>
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; position: fixed; touch-action: none; }
-        body { background: #222; font-family: sans-serif; display: flex; flex-direction: column; }
+        body { background: #0f172a; font-family: sans-serif; display: flex; flex-direction: column; color: white; }
         
-        /* 上下広告：100px */
-        #ad-top, #ad-bottom { width: 100%; height: 100px; background: #333; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 100; position: relative; }
-        iframe { border: none; width: 100%; height: 100%; background: #333; }
+        /* 上部広告：100px固定 */
+        #ad-top-container { position: fixed; top: 0; left: 0; width: 100%; height: 100px; background: #000; z-index: 9999; overflow: hidden; display: flex; justify-content: center; align-items: center; }
 
         /* ゲームエリア */
-        #game-area { flex-grow: 1; position: relative; width: 100%; background: #000; overflow: hidden; }
+        #game-area { position: absolute; top: 100px; bottom: 0; left: 0; right: 0; background: #000; overflow: hidden; z-index: 10; }
         canvas { display: block; width: 100%; height: 100%; }
         
-        #ui { position: absolute; top: 10px; left: 20px; color: white; font-size: 24px; font-weight: bold; z-index: 5; display: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        #ui { position: absolute; top: 10px; left: 20px; color: white; font-size: 24px; font-weight: bold; z-index: 15; display: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
         
-        /* メニュー画面 */
+        /* メニュー・リザルト画面 */
         #menuScreen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); color: white; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; z-index: 200; padding: 20px 0; 
+            background: rgba(15,23,42,0.95); display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; z-index: 200; padding: 10px; 
         }
 
-        /* 中央広告 */
+        /* リザルト用 300x250 広告枠 */
         #ad-middle-container { 
-            width: 320px; height: 100px; background: rgba(255,255,255,0.1); 
+            width: 300px; height: 250px; background: #000; 
             margin: 15px 0; display: none; justify-content: center; align-items: center; 
-            overflow: hidden; flex-shrink: 0; border: 1px solid #444; transition: opacity 0.3s;
+            overflow: hidden; border: 1px solid #334155; border-radius: 10px;
         }
 
-        .btn-group { display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0; width: 100%; }
+        .btn-group { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
         .menu-btn { padding: 15px 0; font-size: 18px; border: none; border-radius: 50px; color: white; font-weight: bold; cursor: pointer; text-decoration: none; width: 260px; text-align: center; transition: 0.2s; }
-        #goButton { background: #ff4757; box-shadow: 0 4px #ff6b81; }
-        #goButton:disabled { background: #666; box-shadow: none; opacity: 0.7; }
-        .link-btn { background: #ff4081; box-shadow: 0 4px #c2185b; }
+        #goButton { background: #22c55e; box-shadow: 0 4px #16a34a; }
+        #goButton:disabled { background: #475569; box-shadow: none; opacity: 0.7; }
+        .link-btn { background: #3b82f6; box-shadow: 0 4px #2563eb; }
 
-        /* 大広告 */
-        #bigAdScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; justify-content: center; align-items: center; }
-        .ad-frame-wrapper { width: 95%; height: 85%; position: relative; }
-        .ad-close-btn { position: absolute; top: -15px; right: -15px; color: white; font-size: 22px; font-weight: bold; cursor: pointer; background: rgba(0,0,0,0.8); width: 44px; height: 44px; border-radius: 50%; display: none; align-items: center; justify-content: center; z-index: 3100; border: 2px solid white; }
+        /* 5秒全画面広告 */
+        #inter-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center; }
+        .inter-content { width: 330px; height: 330px; background: #fff; position: relative; border-radius: 8px; }
+        #close-ad-btn { position: absolute; top: -50px; right: 0px; width: 45px; height: 45px; background: #333; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; border: 2px solid #fff; cursor: pointer; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div id="ad-top"><iframe id="frame-top" src="ad.html?pos=top"></iframe></div>
+    <div id="ad-top-container">
+        <ins class="adsbygoogle" style="display:inline-block;width:320px;height:100px" data-ad-client="ca-pub-1299640300068792" data-ad-slot="3972022911"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
 
     <div id="game-area">
         <div id="ui">Score: 0</div>
         
         <div id="menuScreen">
             <div style="text-align:center;">
-                <h2 id="menuTitle" style="color:#00FF00; margin:0; font-size: 32px;">DODGE GAME</h2>
+                <h2 id="menuTitle" style="color:#facc15; margin:0; font-size: 32px;">DODGE GAME</h2>
                 <p id="menuMsg" style="margin:5px 0; font-size: 16px;">障害物を避けろ！</p>
             </div>
 
             <div id="ad-middle-container">
-                <div id="im-8b492cea6667490da71c488bdcc7cfc8">
-                    <script async src="https://imp-adedge.i-mobile.co.jp/script/v1/spot.js?20220104"></script>
-                    <script>(window.adsbyimobile=window.adsbyimobile||[]).push({pid:84561,mid:590804,asid:1924211,type:"banner",display:"inline",elementid:"im-8b492cea6667490da71c488bdcc7cfc8"})</script>
-                </div>
+                <ins class="adsbygoogle"
+                     style="display:inline-block;width:300px;height:250px"
+                     data-ad-client="ca-pub-1299640300068792"
+                     data-ad-slot="9050127185"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
             </div>
 
             <div class="btn-group" id="btnGroup">
@@ -72,19 +76,17 @@
         </div>
 
         <canvas id="gameCanvas"></canvas>
+    </div>
 
-        <div id="bigAdScreen">
-            <div class="ad-frame-wrapper">
-                <div id="ad-close-btn" class="ad-close-btn" onclick="closeBigAd()"></div>
-                <iframe id="ad-large-frame" src="" style="width:100%; height:100%; border:none;"></iframe>
-            </div>
+    <div id="inter-screen">
+        <div class="inter-content">
+            <div id="close-ad-btn" onclick="closeAd()">5</div>
+            <iframe id="ifr-inter" src="about:blank" style="width:100%; height:100%; border:none; border-radius:8px; background: #fff;"></iframe>
         </div>
     </div>
 
-    <div id="ad-bottom"><iframe id="frame-bottom" src="ad.html?pos=bottom"></iframe></div>
-
     <script>
-        const canvas = document.getElementById("gameCanvas"), ctx = canvas.getContext("2d"), ui = document.getElementById("ui"), menuScreen = document.getElementById("menuScreen"), menuTitle = document.getElementById("menuTitle"), menuMsg = document.getElementById("menuMsg"), goButton = document.getElementById("goButton"), adMid = document.getElementById("ad-middle-container"), btnGroup = document.getElementById("btnGroup");
+        const canvas = document.getElementById("gameCanvas"), ctx = canvas.getContext("2d"), ui = document.getElementById("ui"), menuScreen = document.getElementById("menuScreen"), menuTitle = document.getElementById("menuTitle"), menuMsg = document.getElementById("menuMsg"), goButton = document.getElementById("goButton"), adMid = document.getElementById("ad-middle-container");
         
         function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
         window.addEventListener('resize', resize);
@@ -105,7 +107,6 @@
             const cx = e.touches ? e.touches[0].clientX : e.clientX;
             const rect = canvas.getBoundingClientRect();
             player.x = cx - rect.left - 15;
-            // 画面外はみ出し防止
             if(player.x < 0) player.x = 0;
             if(player.x > canvas.width - 30) player.x = canvas.width - 30;
         }
@@ -119,27 +120,26 @@
                 x: Math.random() * (canvas.width - 25),
                 y: -30,
                 size: 25 + Math.random() * 20,
-                speed: 4 + Math.min(score / 5, 8)
+                speed: 4 + Math.min(score / 10, 8)
             });
-            setTimeout(spawnEnemy, Math.max(250, 600 - score * 5));
+            setTimeout(spawnEnemy, Math.max(250, 600 - score * 3));
         }
 
         function update() {
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // プレイヤー描画
-            ctx.fillStyle = "#00FF00";
+            // プレイヤー
+            ctx.fillStyle = "#22c55e";
             ctx.fillRect(player.x, player.y, 30, 30);
             
-            // 敵の描画と更新
+            // 敵
             for(let i = enemies.length - 1; i >= 0; i--) {
                 let e = enemies[i];
                 e.y += e.speed;
-                ctx.fillStyle = "#ff4757";
+                ctx.fillStyle = "#ef4444";
                 ctx.fillRect(e.x, e.y, e.size, e.size);
                 
-                // 当たり判定
                 if (player.x < e.x + e.size && player.x + 30 > e.x && player.y < e.y + e.size && player.y + 30 > e.y) {
                     gameOver();
                     return;
@@ -159,24 +159,44 @@
             cancelAnimationFrame(animationId);
             
             menuTitle.innerText = "GAME OVER";
-            menuTitle.style.color = "#ff4757";
+            menuTitle.style.color = "#ef4444";
             menuMsg.innerText = "Score: " + score;
             
             goButton.innerText = "お待ちください..."; goButton.disabled = true;
-            adMid.style.display = "flex"; adMid.style.opacity = "0.4";
+            adMid.style.display = "flex";
             menuScreen.style.display = "flex";
 
-            setTimeout(() => { adMid.style.opacity = "1"; goButton.disabled = false; goButton.innerText = "リトライ！"; }, 1500);
-            if (playCount % 2 === 0) { setTimeout(showBigAd, 500); }
+            // 1.5秒後にボタン有効化
+            setTimeout(() => { goButton.disabled = false; goButton.innerText = "リトライ！"; }, 1500);
+
+            // カウント処理：2回目、5回目、8回目...
+            if (playCount === 2 || (playCount >= 5 && (playCount - 2) % 3 === 0)) {
+                setTimeout(showLargeAd, 500);
+            }
         }
 
-        function showBigAd() {
-            const screen = document.getElementById("bigAdScreen"), closeBtn = document.getElementById("ad-close-btn");
-            document.getElementById("ad-large-frame").src = "./ad.large.html?t=" + Date.now();
-            screen.style.display = "flex"; let countdown = 5; closeBtn.style.display = "flex"; closeBtn.innerText = countdown; closeBtn.style.pointerEvents = "none";
-            const timerInt = setInterval(() => { countdown--; closeBtn.innerText = countdown; if (countdown <= 0) { clearInterval(timerInt); closeBtn.innerText = "×"; closeBtn.style.pointerEvents = "auto"; } }, 1000);
+        function showLargeAd() {
+            const screen = document.getElementById("inter-screen"), closeBtn = document.getElementById("close-ad-btn"), ifr = document.getElementById('ifr-inter');
+            ifr.src = './ad.large.html?v=' + Date.now();
+            screen.style.display = "flex";
+            let timer = 5;
+            closeBtn.innerText = timer; closeBtn.style.pointerEvents = "none"; closeBtn.style.background = "#555";
+            const countdown = setInterval(() => {
+                timer--;
+                if (timer > 0) closeBtn.innerText = timer;
+                else {
+                    clearInterval(countdown);
+                    closeBtn.innerText = "×";
+                    closeBtn.style.background = "#ff4444";
+                    closeBtn.style.pointerEvents = "auto";
+                }
+            }, 1000);
         }
-        function closeBigAd() { document.getElementById("bigAdScreen").style.display = "none"; document.getElementById("ad-large-frame").src = ""; }
+
+        function closeAd() {
+            document.getElementById("inter-screen").style.display = "none";
+            document.getElementById('ifr-inter').src = 'about:blank';
+        }
     </script>
 </body>
 </html>
